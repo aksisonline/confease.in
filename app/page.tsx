@@ -1,9 +1,60 @@
+"use client"
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SocialLinks from "@/components/social-links";
 import Script from "next/script";
+import { useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+
+// Initialize Supabase client
+const supabase = createClient();
 
 export default function ComingSoonPage() {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSent, setIsSent] = useState(false);
+
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit email');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        const { error } = await supabase
+          .from("email_subscriptions")
+          .insert([{ email }]);
+
+        if (error) {
+          throw error;
+        }
+        
+        setIsSent(true);
+        setEmail('');
+      } else {
+        throw new Error(result.error);
+      }
+
+    } catch (error) {
+      console.error('Error submitting email:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col justify-between bg-white text-black">
       <Script src="https://www.instagram.com/embed.js" strategy="lazyOnload" />
@@ -23,19 +74,33 @@ export default function ComingSoonPage() {
             A safe space for GenZ to confess, heal, and grow. Coming soon to
             your screens and hearts.
           </p>
-          <form className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-grow"
-            />
-            <Button
-              type="submit"
-              className="bg-black text-white hover:bg-gray-800"
+          {isSent ? (
+            <div className="flex flex-col items-center space-y-4">
+              <p className="text-xl font-semibold text-black">Thank you for subscribing!</p>
+              <p className="text-gray-600">We&apos;ll keep you updated on our launch.</p>
+            </div>
+          ) : (
+            <form
+              className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto"
+              onSubmit={handleSubmit}
             >
-              Notify Me
-            </Button>
-          </form>
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-grow"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+              />
+              <Button
+                type="submit"
+                className="bg-black text-white hover:bg-gray-800"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Sending...' : 'Notify Me'}
+              </Button>
+            </form>
+          )}
         </div>
 
         <div className="w-full max-w-[540px] flex justify-center">
