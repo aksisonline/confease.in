@@ -48,7 +48,7 @@ export default function InstagramPost() {
             <Link href="#" className="font-semibold mr-2">
               confease
             </Link>
-            Sometimes the weight of our thoughts becomes too heavy to carry alone. That's why we're building a safe
+            Sometimes the weight of our thoughts becomes too heavy to carry alone. That&apos;s why we&apos;re building a safe
             space for you to share, heal, and grow together. #MentalHealth #GenZ #ComingSoon
           </p>
           <p className="text-xs text-gray-500">2 HOURS AGO</p>
